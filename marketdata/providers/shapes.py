@@ -5,6 +5,9 @@ from enum import Enum
 class AssetClass(Enum):
     EQUITY = "equity"
 
+class Interval(Enum):
+    DAY = "1day"
+
 
 @dataclass(frozen=True)
 class Candle:
