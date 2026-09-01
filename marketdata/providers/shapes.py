@@ -2,8 +2,10 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 
+
 class AssetClass(Enum):
     EQUITY = "equity"
+
 
 class Interval(Enum):
     DAY = "1day"
@@ -17,6 +19,12 @@ class Candle:
     low: Decimal
     close: Decimal
     volume: Decimal = Decimal("0")
+
+
+@dataclass(frozen=True)
+class Quote:
+    price: Decimal
+    timestamp: int
 
 
 @dataclass(frozen=True)
