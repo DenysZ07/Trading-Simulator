@@ -1,6 +1,7 @@
 import requests
 from marketdata.providers.base import MarketDataProvider
 from marketdata.providers.shapes import Candle, Quote, Interval, Instrument
+from marketdata.providers.exceptions import SymbolNotFound, ProviderError, ProviderUnavailable, RateLimited
 import os
 from datetime import timezone, datetime
 import json
@@ -40,10 +41,23 @@ class AlpacaProvider(MarketDataProvider):
         api_url = f"{self.ALPACA_URL}/stocks/{symbol}/bars"
 
         response = requests.get(url=api_url, params=params, headers=headers)
+
+        if response.status_code == 404:
+            raise SymbolNotFound(symbol)
+        elif response.status_code == 429:
+            raise RateLimited()
+        elif response.status_code != 200:
+            raise ProviderUnavailable(f"unexpected status {response.status_code}")
+        
         data = json.loads(response.text, parse_float=Decimal)
 
+        bars = data.get("bars")
+
+        if not bars:
+            raise SymbolNotFound(symbol)
+
         candles = []
-        for bar in data["bars"]:
+        for bar in bars:
             candles.append(Candle(
                 timestamp=int(datetime.fromisoformat(bar["t"]).timestamp()),
                 open=bar["o"],
