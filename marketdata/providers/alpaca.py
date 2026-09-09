@@ -40,7 +40,8 @@ class AlpacaProvider(MarketDataProvider):
         params = {"timeframe": self.ALPACA_INTERVAL[interval], 
                   "start": datetime.fromtimestamp(start, tz=timezone.utc).date().isoformat(), 
                   "end": datetime.fromtimestamp(end, tz=timezone.utc).date().isoformat(), 
-                  "feed": "sip"}
+                  "feed": "sip",
+                  "adjustment": "split"}
 
         
         api_url = f"{self.ALPACA_URL}/stocks/{symbol}/bars"
