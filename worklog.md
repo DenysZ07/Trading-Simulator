@@ -1,0 +1,1 @@
+Alpaca has adjustment parameter that needs to be set later. Default will give unadjusted prices and will affect tickers like NVDA which had a 10 for 1 split in June 2024 and that will show a fake 90% crash if looking up that time. 

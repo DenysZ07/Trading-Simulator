@@ -1,7 +1,7 @@
 import requests
 from marketdata.providers.base import MarketDataProvider
-from marketdata.providers.shapes import Candle, Quote, Interval, Instrument
-from marketdata.providers.exceptions import SymbolNotFound, ProviderError, ProviderUnavailable, RateLimited
+from marketdata.providers.shapes import Candle, Quote, Interval, Instrument, AssetClass
+from marketdata.providers.exceptions import SymbolNotFound, ProviderUnavailable, RateLimited
 import os
 from datetime import timezone, datetime
 import json
@@ -19,9 +19,14 @@ class AlpacaProvider(MarketDataProvider):
         self.api_secret = os.environ["APCA_API_SECRET_KEY"]
 
     def available_instruments(self) -> list[Instrument]: 
-        """Returns list of available instruments.
-        Raises: ProviderUnavailable, RateLimited."""
-        raise NotImplementedError
+        """Returns list of available instruments."""
+        return [
+            Instrument("AAPL", "Apple Inc.", AssetClass.EQUITY),
+            Instrument("MSFT", "Microsoft Corporation", AssetClass.EQUITY),
+            Instrument("NVDA", "NVIDIA Corporation", AssetClass.EQUITY),
+            Instrument("JPM", "JPMorgan Chase & Co.", AssetClass.EQUITY),
+            Instrument("GOOGL", "Alphabet Inc.", AssetClass.EQUITY),
+        ]
     
 
     def historical_candles(self, symbol: str, interval: Interval, start: int, end: int) -> list[Candle]: 
@@ -45,7 +50,7 @@ class AlpacaProvider(MarketDataProvider):
         if response.status_code == 404:
             raise SymbolNotFound(symbol)
         elif response.status_code == 429:
-            raise RateLimited()
+            raise RateLimited(symbol)
         elif response.status_code != 200:
             raise ProviderUnavailable(f"unexpected status {response.status_code}")
         
