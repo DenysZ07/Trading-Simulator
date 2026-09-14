@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import datetime, timezone
 
 
 class Instrument(models.Model):
@@ -11,7 +12,12 @@ class Instrument(models.Model):
     symbol = models.CharField(max_length=6, unique=True)
     display_name = models.CharField(max_length=100)
     asset_class = models.CharField(max_length=20, choices=AssetClass.choices)
-    quote_currency = models.CharField(max_length=3, default="USD")    
+    quote_currency = models.CharField(max_length=3, default="USD")   
+
+    def __str__(self):
+        return self.symbol
+
+     
 
 
 class Candle(models.Model):
@@ -33,3 +39,8 @@ class Candle(models.Model):
                 name="unique_candle",
             )
         ]
+
+
+    def __str__(self):
+        date = datetime.fromtimestamp(self.timestamp, tz=timezone.utc).date()
+        return f"{self.instrument.symbol} {date}"
