@@ -36,3 +36,15 @@
 **Costs:** Prices won't match charts on Yahoo or TradingView, which default to fully adjusted. In the long run this will mean returns will look slightly lower than  the true total returns because dividends aren't reflected.
 
 **Date:** 2026-09-09 
+
+## 4. Candle Uniqueness and Indexing
+
+**Decision:** Put a unique constraint on `(instrument, interval, timestamp)` for candles. 
+
+**Rejected:** Checking for duplicates in Python instead and having no index. 
+
+**Reason:** Stops duplicate candles in the database, and my code wouldn't guarantee that. It also will build a B-tree index, and my main query is a range. One instrument and one interval, between two timestamps. A B-tree keeps keys sorted so Postgres jumps to the start of the range and reads forward instead of checking every row. The order isn't random. Instrument cuts it down to one stock first, then interval, then the timestamps are already sorted so it will continue reading along until it's past the end date. A hash map can't do that because hashing spreads the keys out on purpose, so there won't be a next one to read.
+
+**Costs:** Inserts are slightly slower because the index will have to be updated. It only helps if the query knows the instrument. 
+
+**Date:** 2026-09-14
