@@ -28,4 +28,5 @@ def candles(request, symbol):
 
 
 def demo(request):
-    return render(request, "marketdata/demo.html")
+    instruments = Instrument.objects.all().order_by("symbol")
+    return render(request, "marketdata/demo.html", {"instruments": instruments})

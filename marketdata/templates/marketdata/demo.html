@@ -10,6 +10,19 @@
 
 <body>
     <h1>Trading Simulator</h1>
+
+
+    <div id="symbols">
+
+        {% for instrument in instruments%}
+            <button data-symbol="{{ instrument.symbol }}">{{ instrument.symbol }}</button>
+        {% endfor %}
+
+
+    </div>
+
+
+
     <div id="chart"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
@@ -21,9 +34,21 @@
 
         const series = chart.addSeries(LightweightCharts.CandlestickSeries);
 
-        fetch("/api/candles/AAPL/")
-            .then(response => response.json())
-            .then(data => series.setData(data));
+        function loadSymbol(symbol) {
+            fetch(`/api/candles/${symbol}/`)
+                .then(response => response.json())
+                .then(data => series.setData(data));
+        }
+
+        loadSymbol("AAPL");
+
+
+        document.querySelectorAll("#symbols button").forEach(button => {
+            button.addEventListener("click", () => {
+                loadSymbol(button.dataset.symbol);
+            });
+        });
+
 
 
     </script>
