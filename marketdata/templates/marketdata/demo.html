@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Trading Simulator</title>
+
+</head>
+
+<body>
+    <h1>Trading Simulator</h1>
+    <div id="chart"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
+
+
+    <script>
+
+        const chart = LightweightCharts.createChart(document.getElementById("chart"), {width: 800, height: 400});
+
+        const series = chart.addSeries(LightweightCharts.CandlestickSeries);
+
+        fetch("/api/candles/AAPL/")
+            .then(response => response.json())
+            .then(data => series.setData(data));
+
+
+    </script>
+
+
+
+
+</body>
+
+</html>

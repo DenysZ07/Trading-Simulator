@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.http import JsonResponse
 
 from .models import Candle, Instrument
@@ -24,3 +24,8 @@ def candles(request, symbol):
     ]
 
     return JsonResponse(data, safe=False)
+
+
+
+def demo(request):
+    return render(request, "marketdata/demo.html")
