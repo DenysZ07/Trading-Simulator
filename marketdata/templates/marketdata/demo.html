@@ -152,6 +152,14 @@
         });
 
         function loadSymbol(symbol) {
+
+            document.querySelectorAll("#symbols button").forEach(button => {
+
+                button.classList.toggle("active", button.dataset.symbol === symbol);
+
+
+            });
+
             fetch(`/api/candles/${symbol}/`)
                 .then(response => response.json())
                 .then(data => series.setData(data));
