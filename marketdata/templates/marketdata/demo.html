@@ -6,6 +6,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Trading Simulator</title>
 
+    <style>
+
+        :root {
+            --bg: #0e1117;
+            --panel: #161b22;
+            --text: #e6edf3;
+            --muted: #8b949e;
+            --accent: #2f81f7;
+            --up: #26a69a;
+            --down: #ef5350;
+            --space: 8px;
+            --mono: "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: calc(var(--space) * 3);
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Trebuchet MS", system-ui, sans-serif;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 calc(var(--space) * 3);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: calc(var(--space) * 3);
+            min-width: 0;
+        }
+
+        @media (min-width: 900px) {
+            .layout {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--panel);
+            border-radius: var(--space);
+            padding: calc(var(--space) * 2);
+        }
+
+
+        #chart {
+            width: 100%;
+            height: 400px;
+            
+        
+        }
+
+        #symbols {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space);
+            margin-bottom: calc(var(--space) * 3);
+        }
+
+        #symbols button {
+            background: var(--panel);
+            color: var(--text);
+            border: 1px solid #30363d;
+            border-radius: var(--space);
+            padding: var(--space) calc(var(--space) * 2);
+            font-family: inherit;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        #symbols button:hover {
+            border-color: var(--accent);
+        }
+
+        #symbols button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+    </style>
+
+
 </head>
 
 <body>
@@ -22,17 +116,40 @@
     </div>
 
 
-
-    <div id="chart"></div>
+    <div class="layout">
+        <div id="chart"></div>
+        <div class="panel">
+            <h2>Order entry and portfolio tracking. Data layer and charting are live. Trading engine in progress.></h2>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.1/dist/lightweight-charts.standalone.production.js"></script>
 
 
     <script>
 
-        const chart = LightweightCharts.createChart(document.getElementById("chart"), {width: 800, height: 400});
+        const chart = LightweightCharts.createChart(document.getElementById("chart"), {
+            autoSize: true,
+            layout: {
+                background: {color: "#0e1117"},
+                textColor: "#8b949e",
+            },
 
-        const series = chart.addSeries(LightweightCharts.CandlestickSeries);
+            grid: {
+                vertLines: {color: "#21262d"},
+                horzLines: {color: "#21262d"}
+                
+            }
+            
+        });
+
+        const series = chart.addSeries(LightweightCharts.CandlestickSeries, {
+            upColor: "#26a69a",
+            downColor: "#ef5350",
+            borderVisible: false,
+            wickUpColor: "#26a69a",
+            wickDownColor: "#ef5350"
+        });
 
         function loadSymbol(symbol) {
             fetch(`/api/candles/${symbol}/`)
