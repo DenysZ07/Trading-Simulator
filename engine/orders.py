@@ -40,7 +40,15 @@ class Lot:
     price: Decimal
     timestamp: int 
 
+
 @dataclass
 class Position: 
     symbol: str 
     lots: list[Lot] = field(default_factory=list)
+
+
+@dataclass
+class Portfolio:
+    cash: Decimal
+    positions: dict[str, Position] = field(default_factory=dict)
+    trades: list[Trade] = field(default_factory=list)
