@@ -3,4 +3,4 @@ from . import views
 
 
 urlpatterns = [path("api/candles/<str:symbol>/", views.candles, name="candles"),
-               path("demo/", views.demo, name="demo")]
+               path("", views.demo, name="demo")]
