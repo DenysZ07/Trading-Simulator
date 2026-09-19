@@ -31,6 +31,7 @@ class Trade:
     timestamp: int
     commission: Decimal
     slippage: Decimal
+    spread: Decimal
 
 
 
