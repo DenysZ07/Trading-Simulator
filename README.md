@@ -59,4 +59,4 @@ The market data provider has a small set of tests that run against bith Alpaca a
 
 ## Design decisions
 
-See [DECISIONS.md](DECISIONS.md)
+See [decisions.md](decisions.md)
