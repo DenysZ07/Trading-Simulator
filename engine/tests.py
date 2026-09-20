@@ -9,6 +9,7 @@ class TradingTests(SimpleTestCase):
     def setUp(self):
         self.test_portfolio = Portfolio(Decimal("1000"))
         self.test_portfolio2 = Portfolio(Decimal("1000"))
+        self.test_portfolio3 = Portfolio(Decimal("1000"))
 
 
     test_order_fail = Order("AAPL", Side.BUY, 10, OrderType.MARKET)
@@ -17,6 +18,8 @@ class TradingTests(SimpleTestCase):
     test_order_buy_1 = Order("MSFT", Side.BUY, 10, OrderType.MARKET)
     test_order_buy_2 = Order("MSFT", Side.BUY, 10, OrderType.MARKET)
     test_order_sell = Order("MSFT", Side.SELL, 15, OrderType.MARKET)
+
+    test_limit_buy = Order("GOOGL", Side.BUY, 1, OrderType.LIMIT, Decimal("342.90"))
 
 
     def test_buy_order_filled(self):
@@ -30,6 +33,7 @@ class TradingTests(SimpleTestCase):
             fill_order(self.test_portfolio, self.test_order_fail, Decimal("332.41"), 1700000000)
 
 
+
     def test_rejection_leaves_portfolio_unchanged(self):
         with self.assertRaises(OrderRejected):
             fill_order(self.test_portfolio, self.test_order_fail, Decimal("332.41"), 1700000000)
@@ -37,6 +41,7 @@ class TradingTests(SimpleTestCase):
         self.assertEqual(self.test_portfolio.cash, Decimal("1000"))
         self.assertEqual(len(self.test_portfolio.trades), 0)
         self.assertEqual(len(self.test_portfolio.positions), 0)
+
 
     def test_sell_oldest_lots_first(self):
 
@@ -47,3 +52,20 @@ class TradingTests(SimpleTestCase):
         self.assertEqual(len(self.test_portfolio2.positions["MSFT"].lots), 1)
         self.assertEqual(self.test_portfolio2.positions["MSFT"].lots[0].quantity, 5)
         self.assertEqual(self.test_portfolio2.positions["MSFT"].lots[0].price, Decimal("50.0150"))
+
+
+
+    def test_limit_order_fill(self):
+
+        fill_order(self.test_portfolio3, self.test_limit_buy, Decimal("342.75"), 1700000000)
+
+        self.assertEqual(self.test_portfolio3.cash, Decimal("657.147175"))
+        self.assertEqual(len(self.test_portfolio3.trades), 1)
+
+    
+    def test_limit_order_rejection(self):
+
+        with self.assertRaises(OrderRejected):
+            fill_order(self.test_portfolio3, self.test_limit_buy, Decimal("342.87"), 1700000000)
+
+    

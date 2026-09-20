@@ -1,5 +1,5 @@
 from .costs import get_cost, COMMISSION_BPS, SPREAD_BPS, SLIPPAGE_BPS
-from .orders import Side, Portfolio, Order, Trade, Position, Lot
+from .orders import Side, Portfolio, Order, Trade, Position, Lot, OrderType
 from .exceptions import OrderRejected
 from decimal import Decimal
 
@@ -8,6 +8,16 @@ def fill_order(portfolio: Portfolio, order: Order, price: Decimal, timestamp: in
 
     fill_price = get_cost(order.side, price) 
     total_cost = fill_price * order.quantity
+
+
+    if order.order_type == OrderType.LIMIT:
+
+        if order.side == Side.BUY and fill_price > order.limit_price:
+            raise OrderRejected(f"The fill price: ${fill_price}, is above the order limit of ${order.limit_price}")
+        elif order.side == Side.SELL and fill_price < order.limit_price:
+            raise OrderRejected(f"The fill price: ${fill_price}, is below the order limit of ${order.limit_price}")
+
+
 
     if order.side == Side.BUY: 
 
