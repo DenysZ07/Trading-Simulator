@@ -32,6 +32,7 @@ class Trade:
     commission: Decimal
     slippage: Decimal
     spread: Decimal
+    cost_basis: Decimal | None = None
 
 
 

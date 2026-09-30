@@ -82,6 +82,7 @@ def fill_order(portfolio: Portfolio, order: Order, price: Decimal, timestamp: in
             commission=(COMMISSION_BPS / 10000)*price*order.quantity,
             spread=((SPREAD_BPS/2) / 10000)*price*order.quantity,
             slippage=(SLIPPAGE_BPS / 10000)*price*order.quantity,
+            cost_basis=cost_basis,
         )
 
 
