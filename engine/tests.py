@@ -3,6 +3,7 @@ from .orders import Portfolio, Order, Side, Trade, Position, Lot, OrderType
 from .exceptions import OrderRejected
 from .execution import fill_order
 from decimal import Decimal
+from .pnl import unrealised_pnl, realised_pnl
 
 class TradingTests(SimpleTestCase):
 
@@ -10,6 +11,7 @@ class TradingTests(SimpleTestCase):
         self.test_portfolio = Portfolio(Decimal("1000"))
         self.test_portfolio2 = Portfolio(Decimal("1000"))
         self.test_portfolio3 = Portfolio(Decimal("1000"))
+        self.test_portfolio4 = Portfolio(Decimal("1000"))
 
 
     test_order_fail = Order("AAPL", Side.BUY, 10, OrderType.MARKET)
@@ -68,4 +70,22 @@ class TradingTests(SimpleTestCase):
         with self.assertRaises(OrderRejected):
             fill_order(self.test_portfolio3, self.test_limit_buy, Decimal("342.87"), 1700000000)
 
+
+
+    def test_realised_pnl(self):
+        fill_order(self.test_portfolio4, self.test_order_buy_1, Decimal("40"), 1700000000)
+        fill_order(self.test_portfolio4, self.test_order_buy_2, Decimal("50"), 1700000000)
+        fill_order(self.test_portfolio4, self.test_order_sell, Decimal("50"), 1700000000)
+
+        self.assertEqual(realised_pnl(self.test_portfolio4), Decimal("99.58"))
+
+
+    def test_unrealised_pnl(self):
+        fill_order(self.test_portfolio4, self.test_order_buy_1, Decimal("40"), 1700000000)
+        fill_order(self.test_portfolio4, self.test_order_buy_2, Decimal("50"), 1700000000)
+        fill_order(self.test_portfolio4, self.test_order_sell, Decimal("50"), 1700000000)
+
+        prices = {"MSFT": Decimal("60")}
+
     
+        self.assertEqual(unrealised_pnl(self.test_portfolio4, prices), Decimal("49.925"))
