@@ -1,6 +1,7 @@
 from decimal import Decimal
 from engine.orders import Lot, Portfolio, Position, Side, Trade
 from . import models
+from django.db import transaction
 
 
 def load_portfolio(db_portfolio: models.Portfolio) -> Portfolio:
@@ -31,3 +32,43 @@ def load_portfolio(db_portfolio: models.Portfolio) -> Portfolio:
         ))
 
     return portfolio
+
+
+def save_portfolio(db_portfolio: models.Portfolio, portfolio: Portfolio) -> None:
+
+    with transaction.atomic():
+
+        db_portfolio.cash = portfolio.cash
+        db_portfolio.save()
+        db_portfolio.positions.all().delete()
+
+        for symbol, position in portfolio.positions.items():
+
+            if not position.lots:
+                continue 
+
+            db_position = models.Position.objects.create(portfolio=db_portfolio, symbol=symbol)
+
+
+            for lot in position.lots:
+                models.Lot.objects.create(
+                    position=db_position,
+                    quantity=lot.quantity, 
+                    price=lot.price,
+                    timestamp=lot.timestamp,
+                )
+        stored = db_portfolio.trades.count()
+
+        for trade in portfolio.trades[stored:]:
+            models.Trade.objects.create(
+                portfolio=db_portfolio,
+                symbol=trade.symbol,
+                side=trade.side.value,
+                quantity=trade.quantity,
+                fill_price=trade.fill_price,
+                timestamp=trade.timestamp,
+                commission=trade.commission,
+                spread=trade.spread,
+                slippage=trade.slippage,
+                cost_basis=trade.cost_basis,
+            )
