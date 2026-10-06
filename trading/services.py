@@ -2,6 +2,7 @@ from decimal import Decimal
 from engine.orders import Lot, Portfolio, Position, Side, Trade
 from . import models
 from django.db import transaction
+from django.conf import settings
 
 
 def load_portfolio(db_portfolio: models.Portfolio) -> Portfolio:
@@ -72,3 +73,15 @@ def save_portfolio(db_portfolio: models.Portfolio, portfolio: Portfolio) -> None
                 slippage=trade.slippage,
                 cost_basis=trade.cost_basis,
             )
+
+
+def get_or_create_portfolio(request) -> models.Portfolio:
+    if not request.session.session_key:
+        request.session.create()
+
+    db_portfolio, _ = models.Portfolio.objects.get_or_create(
+        session_key=request.session.session_key,
+        defaults={"cash": settings.STARTING_CASH},
+    )
+
+    return db_portfolio
