@@ -14,6 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import dj_database_url
 from decimal import Decimal
+import sys
 
 load_dotenv()
 
@@ -85,6 +86,11 @@ DATABASES = {
     'default': dj_database_url.parse(os.environ["DATABASE_URL"])
     }
 
+if "test" in sys.argv:
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:",
+    }
 
 
 # Password validation
