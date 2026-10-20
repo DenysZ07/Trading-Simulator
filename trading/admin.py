@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import Lot, Portfolio, Position, Trade
 
-# Register your models here.
+admin.site.register(Portfolio)
+admin.site.register(Position)
+admin.site.register(Lot)
+admin.site.register(Trade)

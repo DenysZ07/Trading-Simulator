@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from marketdata.models import Candle, Instrument
 from marketdata.providers.shapes import Interval
 from engine.execution import fill_order
-
+from engine.pnl import realised_pnl
 
 
 
@@ -50,3 +50,50 @@ def place_order(request):
         "quantity": trade.quantity,
         "fill_price": float(trade.fill_price),
     })
+
+
+
+def portfolio_state(request):
+    db_portfolio = services.get_or_create_portfolio(request)
+    portfolio = services.load_portfolio(db_portfolio)
+
+    prices = {}
+
+    for symbol in portfolio.positions:
+        candle = Candle.objects.filter(
+            instrument__symbol=symbol,
+            interval=Interval.DAY.value,
+        ).order_by("-timestamp").first()
+
+        prices[symbol] = candle.close
+
+
+    positions = []
+    holdings_value = Decimal("0")
+
+    for symbol,position in portfolio.positions.items():
+        quantity = sum(lot.quantity for lot in position.lots)
+        cost = sum(lot.price * lot.quantity for lot in position.lots)
+
+        value = prices[symbol] * quantity
+
+        holdings_value += value
+
+        positions.append({
+            "symbol": symbol,
+            "quantity": quantity,
+            "average_cost": float(cost / quantity),
+            "current_price": float(prices[symbol]),
+            "value": float(value),
+            "unrealised_pnl": float(value - cost),
+        })
+
+
+    return JsonResponse({
+        "cash": float(portfolio.cash),
+        "holdings_value": float(holdings_value),
+        "total_value": float(portfolio.cash + holdings_value),
+        "realised_pnl": float(realised_pnl(portfolio)),
+        "positions": positions,
+    })
+
