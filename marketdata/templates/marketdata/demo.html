@@ -198,6 +198,37 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById("cash").textContent = `$${data.cash.toFixed(2)}`;
+
+                const positions = document.getElementById("positions");
+
+                if (data.positions.length === 0) {
+                    positions.innerHTML = `<p class="empty">No positions yet.</p>`;
+                    return;
+                }
+
+                positions.innerHTML = data.positions.map(p => `
+                    <div class="position">
+
+                        <div class="row">
+                            <span class="symbol">${p.symbol}</span>
+                            <span class="qty">${p.quantity}</span>
+                        </div>
+                    
+                        <div class="row muted">
+                            <span>avg $${p.average_cost.toFixed(2)}</span>
+                            <span>now $${p.current_price.toFixed(2)}</span>
+                        </div>
+
+                        <div class="row">
+                            <span>$${p.value.toFixed(2)}</span>
+                            <span class="${p.unrealised_pnl >= 0 ? "up" : "down"}">
+                                ${p.unrealised_pnl >= 0 ? "+" : ""}$${p.unrealised_pnl.toFixed(2)}    
+                            </span>
+                        </div>
+                    </div>
+                `).join("");
+
+
             });
         }
 
@@ -255,6 +286,10 @@
             button.addEventListener("click", () => {
                 loadSymbol(button.dataset.symbol);
             });
+        });
+
+        document.getElementById("order-type").addEventListener("change", event => {
+            document.getElementById("limit-price").hidden = event.target.value !== "limit";
         });
 
 
