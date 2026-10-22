@@ -9,15 +9,20 @@
     <style>
 
         :root {
-            --bg: #0e1117;
-            --panel: #161b22;
-            --text: #e6edf3;
-            --muted: #8b949e;
-            --accent: #2f81f7;
-            --up: #26a69a;
-            --down: #ef5350;
+            --bg: #0b0c0e;
+            --panel: #121417;
+            --line: #23262b;
+            --line-soft: #1a1d21;
+            --text: #d8dde3;
+            --muted: #6b7280;
+            --accent: #d4a24c;
+            --up: #2ec4a6;
+            --down: #f2645c;
+            --up-bg: #10332e;
+            --down-bg: #3a1a19;
             --space: 8px;
-            --mono: "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+            --radius: 2px;
+            --mono: ui-monospace, "SF Mono", Menlo, monospace;
         }
 
         * {
@@ -55,46 +60,135 @@
             }
         }
 
-        .panel {
+                .panel {
             background: var(--panel);
-            border-radius: var(--space);
-            padding: calc(var(--space) * 2);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: calc(var(--space) * 1.75);
         }
 
-
-        #chart {
-            width: 100%;
-            height: 400px;
-            
-        
+        .balance .label,
+        .panel h2 {
+            font-size: 0.625rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            font-weight: 500;
+            margin: 0 0 calc(var(--space) * 0.75);
         }
 
-        #symbols {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--space);
-            margin-bottom: calc(var(--space) * 3);
+        .panel h2 {
+            border-top: 1px solid var(--line);
+            padding-top: calc(var(--space) * 1.25);
+            margin-top: calc(var(--space) * 1.5);
         }
 
+        .balance .value {
+            font-family: var(--mono);
+            font-size: 1.625rem;
+            letter-spacing: -0.02em;
+        }
+
+        #order-form input,
+        #order-form select,
         #symbols button {
             background: var(--panel);
-            color: var(--text);
-            border: 1px solid #30363d;
-            border-radius: var(--space);
-            padding: var(--space) calc(var(--space) * 2);
-            font-family: inherit;
-            font-size: 0.875rem;
+            color: var(--muted);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: calc(var(--space) * 0.75) calc(var(--space) * 1.5);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.04em;
             cursor: pointer;
         }
 
         #symbols button:hover {
-            border-color: var(--accent);
+            color: var(--text);
+            border-color: var(--muted);
         }
 
         #symbols button.active {
-            background: var(--accent);
+            background: transparent;
             border-color: var(--accent);
-            color: #fff;
+            color: var(--accent);
+        }
+
+        #order-form {
+            gap: calc(var(--space) * 0.75);
+        }
+
+        .actions {
+            gap: calc(var(--space) * 0.75);
+        }
+
+        .actions button {
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: calc(var(--space) * 1.125);
+        }
+
+        #buy {
+            background: var(--up-bg);
+            border: 1px solid #1f6f63;
+            color: var(--up);
+        }
+
+        #sell {
+            background: var(--down-bg);
+            border: 1px solid #7a3634;
+            color: var(--down);
+        }
+
+        .position {
+            border-bottom: 1px solid var(--line-soft);
+            padding: calc(var(--space) * 0.875) 0;
+        }
+
+        .position .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .position .row.muted {
+            font-family: var(--mono);
+            font-size: 0.6875rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .position .qty,
+        .position span {
+            font-family: var(--mono);
+        }
+
+        .position .symbol {
+            font-family: "Trebuchet MS", system-ui, sans-serif;
+            font-weight: 600;
+            font-size: 0.8125rem;
+        }
+
+        .up { color: var(--up); }
+        .down { color: var(--down); }
+
+        #message {
+            font-family: var(--mono);
+            font-size: 0.6875rem;
+            min-height: 1rem;
+            margin-top: calc(var(--space) * 0.5);
+            color: var(--muted);
+        }
+
+        #message.ok { color: var(--up); }
+        #message.error { color: var(--down); }
+
+        .empty {
+            color: var(--muted);
+            font-size: 0.75rem;
         }
 
     </style>
@@ -159,24 +253,24 @@
         const chart = LightweightCharts.createChart(document.getElementById("chart"), {
             autoSize: true,
             layout: {
-                background: {color: "#0e1117"},
-                textColor: "#8b949e",
+                background: {color: "#0b0c0e"},
+                textColor: "#6b7280",
             },
 
             grid: {
-                vertLines: {color: "#21262d"},
-                horzLines: {color: "#21262d"}
+                vertLines: {color: "#1a1d21"},
+                horzLines: {color: "#1a1d21"}
                 
             }
             
         });
 
         const series = chart.addSeries(LightweightCharts.CandlestickSeries, {
-            upColor: "#26a69a",
-            downColor: "#ef5350",
+            upColor: "#2ec4a6",
+            downColor: "#f2645c",
             borderVisible: false,
-            wickUpColor: "#26a69a",
-            wickDownColor: "#ef5350"
+            wickUpColor: "#2ec4a6",
+            wickDownColor: "#f2645c"
         });
 
         function loadSymbol(symbol) {
@@ -265,9 +359,14 @@
 
             .then(response => response.json().then(data => ({ok: response.ok, data})))
             .then(({ok, data}) => {
-                document.getElementById("message").textContent = ok
-                ? `${side} ${data.quantity} ${data.symbol} at ${data.fill_price.toFixed(2)}`
-                : data.error;
+                const message = document.getElementById("message");
+
+                message.className = ok ? "ok" : "error";
+                message.textContent = ok
+                    ? `${side[0].toUpperCase()}${side.slice(1)} ${data.quantity} ${data.symbol} at $${data.fill_price.toFixed(2)}`
+                    : data.error;
+
+
                 loadPortfolio();
             });
 
