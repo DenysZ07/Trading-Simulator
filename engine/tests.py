@@ -4,6 +4,7 @@ from .exceptions import OrderRejected
 from .execution import fill_order
 from decimal import Decimal
 from .pnl import unrealised_pnl, realised_pnl
+from .ledger import START_OF_CHAIN, serialise_trade, chain_digest
 
 class TradingTests(SimpleTestCase):
 
@@ -89,3 +90,33 @@ class TradingTests(SimpleTestCase):
 
     
         self.assertEqual(unrealised_pnl(self.test_portfolio4, prices), Decimal("49.925"))
+
+
+class LedgerTests(SimpleTestCase):
+
+    def make_trade(self, fill_price):
+        return Trade(
+            symbol="AAPL",
+            side=Side.BUY,
+            quantity=10,
+            fill_price=Decimal(fill_price),
+            timestamp=1700000000,
+            commission=Decimal("0"),
+            slippage=Decimal("0.10"),
+            spread=Decimal("0.05"),
+        )
+
+    def test_same_trade_gives_same_digest(self):
+        first = chain_digest(START_OF_CHAIN, serialise_trade(self.make_trade("50.00")))
+        second = chain_digest(START_OF_CHAIN, serialise_trade(self.make_trade("50.00")))
+
+        self.assertEqual(first, second)
+
+    def test_one_penny_change_scrambles_digest(self):
+        first = chain_digest(START_OF_CHAIN, serialise_trade(self.make_trade("50.00")))
+        second = chain_digest(START_OF_CHAIN, serialise_trade(self.make_trade("50.01")))
+
+        self.assertNotEqual(first, second)
+
+        matching = sum(1 for a,b in zip(first.hex(), second.hex()) if a == b)
+        self.assertLess(matching, 32)
