@@ -3,6 +3,21 @@ from engine.orders import Lot, Portfolio, Position, Side, Trade
 from . import models
 from django.db import transaction
 from django.conf import settings
+from engine.ledger import START_OF_CHAIN, serialise_trade, chain_digest
+
+
+def to_engine_trade(db_trade: models.Trade) -> Trade:
+    return Trade(
+        symbol=db_trade.symbol,
+        side=Side(db_trade.side),
+        quantity=db_trade.quantity,
+        fill_price=db_trade.fill_price,
+        timestamp=db_trade.timestamp,
+        commission=db_trade.commission,
+        spread=db_trade.spread,
+        slippage=db_trade.slippage,
+        cost_basis=db_trade.cost_basis,
+    )
 
 
 def load_portfolio(db_portfolio: models.Portfolio) -> Portfolio:
@@ -20,17 +35,7 @@ def load_portfolio(db_portfolio: models.Portfolio) -> Portfolio:
 
 
     for db_trade in db_portfolio.trades.all().order_by("timestamp", "id"):
-        portfolio.trades.append(Trade(
-            symbol=db_trade.symbol,
-            side=Side(db_trade.side),
-            quantity=db_trade.quantity,
-            fill_price=db_trade.fill_price,
-            timestamp=db_trade.timestamp,
-            commission=db_trade.commission,
-            spread=db_trade.spread,
-            slippage=db_trade.slippage,
-            cost_basis=db_trade.cost_basis,
-        ))
+        portfolio.trades.append(to_engine_trade(db_trade))
 
     return portfolio
 
@@ -58,10 +63,18 @@ def save_portfolio(db_portfolio: models.Portfolio, portfolio: Portfolio) -> None
                     price=lot.price,
                     timestamp=lot.timestamp,
                 )
+
+
+
         stored = db_portfolio.trades.count()
 
+        head = db_portfolio.ledger_entries.order_by("-sequence").first()
+        previous_digest = bytes.fromhex(head.digest) if head else START_OF_CHAIN
+        sequence = head.sequence + 1 if head else 0
+
         for trade in portfolio.trades[stored:]:
-            models.Trade.objects.create(
+            
+            db_trade = models.Trade.objects.create(
                 portfolio=db_portfolio,
                 symbol=trade.symbol,
                 side=trade.side.value,
@@ -73,6 +86,43 @@ def save_portfolio(db_portfolio: models.Portfolio, portfolio: Portfolio) -> None
                 slippage=trade.slippage,
                 cost_basis=trade.cost_basis,
             )
+
+            payload = serialise_trade(trade)
+            digest = chain_digest(previous_digest, payload)
+
+            models.LedgerEntry.objects.create(
+                portfolio=db_portfolio,
+                trade=db_trade,
+                sequence=sequence,
+                payload=payload.decode("utf-8"),
+                previous_digest=previous_digest.hex(),
+                digest=digest.hex(),
+            )
+
+            previous_digest = digest
+            sequence += 1
+
+
+def verify_ledger(db_portfolio: models.Portfolio) -> dict: 
+    previous_digest = START_OF_CHAIN
+    count = 0 
+
+    for entry in db_portfolio.ledger_entries.all():
+        payload = entry.payload.encode("utf-8")
+
+        if serialise_trade(to_engine_trade(entry.trade)) != payload: 
+            return {"intact": False, "sequence": entry.sequence, "failure": "content"}
+
+        if chain_digest(bytes.fromhex(entry.previous_digest), payload).hex() != entry.digest:
+            return {"intact": False, "sequence": entry.sequence, "failure": "digest"}
+
+        if entry.previous_digest != previous_digest.hex():
+            return {"intact": False, "sequence": entry.sequence, "failure": "link"}
+
+        previous_digest = bytes.fromhex(entry.digest)
+        count += 1
+
+    return {"intact": True, "entries": count}
 
 
 def get_or_create_portfolio(request) -> models.Portfolio:
