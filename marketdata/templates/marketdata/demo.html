@@ -191,6 +191,34 @@
             font-size: 0.75rem;
         }
 
+        #verify {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--line);
+            border-top: 1px solid var(--line);
+            border-radius: var(--radius);
+            color: var(--muted);
+            font-family: var(--mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: var(--space);
+            margin-top: calc(var(--space) * 1.5);
+            cursor: pointer;
+        }
+
+        #verify:hover {
+            color: var(--text);
+            border-color: var(--muted);
+        }
+
+        #verify-result {
+            font-family: var(--mono);
+            font-size: 0.6875rem;
+            min-height: 1rem;
+            margin-top: calc(var(--space) * 0.5);
+        }
+
     </style>
 
 
@@ -241,6 +269,9 @@
 
             <h2>Positions</h2>
             <div id="positions"></div>
+
+            <button id="verify" type="button">Verify ledger</button>
+            <div id="verify-result"></div>
 
         </div>
     </div>
@@ -391,6 +422,22 @@
             document.getElementById("limit-price").hidden = event.target.value !== "limit";
         });
 
+
+        document.getElementById("verify").addEventListener("click", () => {
+            fetch("/api/verify/")
+                .then(response => response.json())
+                .then(data => {
+                    const result = document.getElementById("verify-result");
+
+                    if (data.intact) {
+                        result.textContent = `Chain intact — ${data.entries} entries verified`;
+                        result.className = "up";
+                    } else {
+                        result.textContent = `Broken at entry ${data.sequence} — ${data.failure} mismatch`;
+                        result.className = "down";
+                    }
+                });
+        });
 
 
     </script>
