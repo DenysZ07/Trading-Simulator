@@ -13,6 +13,7 @@ from engine.pnl import realised_pnl
 
 
 
+
 def place_order(request):
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=405)
@@ -97,3 +98,9 @@ def portfolio_state(request):
         "positions": positions,
     })
 
+
+
+
+def verify(request):
+    db_portfolio = services.get_or_create_portfolio(request)
+    return JsonResponse(services.verify_ledger(db_portfolio))
