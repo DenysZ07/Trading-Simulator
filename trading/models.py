@@ -44,3 +44,24 @@ class Trade(models.Model):
     spread = models.DecimalField(max_digits=20, decimal_places=8)
     timestamp = models.BigIntegerField()
     cost_basis = models.DecimalField(max_digits=20, decimal_places=8, null=True)
+
+
+class LedgerEntry(models.Model):
+
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name="ledger_entries")
+    trade = models.OneToOneField(Trade, on_delete=models.PROTECT)
+    sequence = models.PositiveIntegerField()
+    payload = models.TextField()
+    previous_digest = models.CharField(max_length=64)
+    digest = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta: 
+        constraints = [
+            models.UniqueConstraint(
+                fields = ["portfolio", "sequence"],
+                name = "unique_ledger_sequence"
+            )
+        ]
+
+        ordering = ["sequence"]
