@@ -48,6 +48,8 @@ class Trade(models.Model):
 
 class LedgerEntry(models.Model):
 
+    """Rows are only ever added, never changed or deleted, and the code has no way to do either."""
+
     portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name="ledger_entries")
     trade = models.OneToOneField(Trade, on_delete=models.PROTECT)
     sequence = models.PositiveIntegerField()
