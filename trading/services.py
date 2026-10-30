@@ -1,9 +1,13 @@
 from decimal import Decimal
-from engine.orders import Lot, Portfolio, Position, Side, Trade
+from engine.orders import Lot, Portfolio, Position, Side, Trade, OrderType, Order
 from . import models
 from django.db import transaction
 from django.conf import settings
 from engine.ledger import START_OF_CHAIN, serialise_trade, chain_digest
+import time
+from engine.execution import fill_order
+from marketdata.models import Candle
+from marketdata.providers.shapes import Interval
 
 
 def to_engine_trade(db_trade: models.Trade) -> Trade:
@@ -125,13 +129,45 @@ def verify_ledger(db_portfolio: models.Portfolio) -> dict:
     return {"intact": True, "entries": count}
 
 
+
+DEMO_HOLDINGS = [
+    ("AAPL", 50, 100),
+    ("NVDA", 100, 90),
+    ("JPM", 40, 60),
+]
+
+def seed_demo_portfolio(db_portfolio: models.Portfolio) -> None:
+    portfolio = load_portfolio(db_portfolio)
+
+    now = int(time.time())
+
+    for symbol, quantity, days_back in DEMO_HOLDINGS:
+        candle = Candle.objects.filter(
+            instrument__symbol=symbol, 
+            interval=Interval.DAY.value, 
+            timestamp__lte=now -days_back * 86400, 
+        ).order_by("-timestamp").first()
+
+        if candle is None: 
+            continue
+
+
+        order = Order(symbol, Side.BUY, quantity, OrderType.MARKET)
+        fill_order(portfolio, order, candle.close, candle.timestamp)
+
+    save_portfolio(db_portfolio, portfolio)
+        
+
 def get_or_create_portfolio(request) -> models.Portfolio:
     if not request.session.session_key:
         request.session.create()
 
-    db_portfolio, _ = models.Portfolio.objects.get_or_create(
+    db_portfolio, created = models.Portfolio.objects.get_or_create(
         session_key=request.session.session_key,
         defaults={"cash": settings.STARTING_CASH},
     )
+
+    if created:
+        seed_demo_portfolio(db_portfolio)
 
     return db_portfolio
